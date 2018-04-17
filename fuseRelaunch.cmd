@@ -1,0 +1,1 @@
+-intstyle "ise" -incremental -lib "unisims_ver" -lib "unimacro_ver" -lib "xilinxcorelib_ver" -lib "secureip" -o "C:/Users/Conner Chyung/Dropbox/School/EE 354/finalproject/pong/pong_top_isim_beh.exe" -prj "C:/Users/Conner Chyung/Dropbox/School/EE 354/finalproject/pong/pong_top_beh.prj" "work.pong_top" "work.glbl" 
