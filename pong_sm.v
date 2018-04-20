@@ -23,16 +23,18 @@ module pong_sm(
 	 input rst,
     input start,
 	 input gameover,
-	 input [9:0] p1_pos_in,
-	 input [9:0] p2_pos_in,
-	 input [9:0] x_pos_in,
-	 input [9:0] y_pos_in,
 	 input v_u_in, //vector up
 	 input v_r_in, //vector right
 	 input p1_u,
 	 input p1_d,
 	 input p2_u,
 	 input p2_d,
+	 input [10:0] wall_lower_bound,
+	 input [10:0] wall_upper_bound,
+	 input [10:0] wall_right,
+	 input [10:0] wall_left,
+	 input [10:0] paddle_width,
+	 input [10:0] paddle_offset,
     output [3:0] state_out,
 	 output [9:0] p1_pos_out,
 	 output [9:0] p2_pos_out,
@@ -49,11 +51,7 @@ module pong_sm(
 		read = 4'b0010, 
 		update = 4'b0100, 
 		collide = 4'b1000,
-		maxcount = 4'b1111,
-		wall_lower_bound = 10'b0000000000, //assuming square shape so only need 2 bounds
-		wall_upper_bound = 10'b1111111111, //can change later to left right up down
-		ball_radius = 10'b0000000001,
-		paddle_width = 10'b0000001000;
+		maxcount = 4'b1111;
 		//movespeed = 10'b0000000001;
 
 	reg p1_up, p1_dn, p2_up, p2_dn, p1_ht, p1_hb, p2_ht, p2_hb;

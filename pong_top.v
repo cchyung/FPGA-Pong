@@ -52,7 +52,7 @@ module pong_top(
 	localparam [9:0] paddle_width = 10'd10;
 
 	// Clock setup and generation
-	wire reset, start, ClkPort, clk, button_clk;
+	wire reset, start, ClkPort, clk, button_clk, frame_clk;
 
 	BUF BUF1 (board_clk, ClkPort);
 	BUF BUF2 (reset, Sw0);
@@ -71,8 +71,7 @@ module pong_top(
 
 	// disable memories
 	assign 	{St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar} = {5'b11111};
-
-
+	
 	// TEMP TESTING STUFF
 	reg [10:0] ball_pos_x;
 	reg [10:0] ball_pos_y;
@@ -109,34 +108,11 @@ module pong_top(
 		else
 			begin
 				if(btnU)
-					paddle_left_pos <= paddle_left_pos + 2;
+					paddle_left_pos <= paddle_left_pos + 4;
 				else if (btnD)
-					paddle_left_pos <= paddle_left_pos - 2;
+					paddle_left_pos <= paddle_left_pos - 4;
 			end
 	end
-
-	/////////////////////////////////////////////////////////////////
-	// Graphics
-	/////////////////////////////////////////////////////////////////
-	wire R, G, B;
-
-	graphics graphics(
-		clk, reset,
-		ball_pos_x, ball_pos_y,
-		paddle_left_pos, paddle_right_pos,
-		canvas_top, canvas_bottom, canvas_left, canvas_right,
-		ball_size,
-		paddle_offset, paddle_height, paddle_width,
-		R, G, B, vga_h_sync, vga_v_sync
-	);
-
-	// TODO: Change back to RBG, just using R for all for white ball
-	always @ (posedge clk)
-		begin
-			vga_r = R;
-			vga_g = R;
-			vga_b = R;
-		end
 
 
 	/////////////////////////////////////////////////////////////////
@@ -146,10 +122,10 @@ module pong_top(
 	wire 	[3:0]	SSD0, SSD1, SSD2, SSD3;
 	wire 	[1:0] ssdscan_clk;
 
-	assign SSD3 = {0, 0, 0, direction};
-	assign SSD2 = paddle_left_pos[9:8];
-	assign SSD1 = paddle_left_pos[7:4];
-	assign SSD0 = paddle_left_pos[3:0];
+	assign SSD3 = score_left;
+	assign SSD2 = score_right;
+	assign SSD1 = ball_pos_x[3:0];
+	assign SSD0 = {0, state};
 
 	// need a scan clk for the seven segment display
 	// 191Hz (50MHz / 2^18) works well
@@ -200,8 +176,89 @@ module pong_top(
 		endcase
 	end
 
+	/////////////////////////////////////////////////////////////////
+	// Game Engine
+	/////////////////////////////////////////////////////////////////
+	wire [1:0] player_right_input = {btnU, btnD};
+	wire [1:0] player_left_input = 2'b00;
+	wire start_game = 1; // TEMP
+	wire game_running;
+	wire game_over_signal;
+	
+	wire [9:0] player_left_pos_d;
+	wire [9:0] player_right_pos_d;
+	wire [9:0] ball_pos_x_d;
+	wire [9:0] ball_pos_y_d;
 
+	reg [9:0] player_left_pos_q;
+	reg [9:0] player_right_pos_q;
+	reg [9:0] ball_pos_x_q;
+	reg [9:0] ball_pos_y_q;
+	
+	wire [3:0] score_left;
+	wire [3:0] score_right;
+	
+	wire [2:0] state;
 
+	
+	game_sm engine(
+		clk, reset,
+		frame_clk,
+		start_game,
+		player_left_input, player_right_input,
+		paddle_width, paddle_height, paddle_offset,
+		ball_size,
+		canvas_top, canvas_bottom, canvas_left, canvas_right,
+		game_running,
+		game_over_signal,
+		ball_pos_x_d, ball_pos_y_d,
+		player_left_pos_d, player_right_pos_d,
+		score_left, score_right
+	);
+	
+	// update new positions after frame is drawn
+	always @ (posedge frame_clk)
+	begin
+		if(reset)
+			begin
+				player_left_pos_q <= 0;
+				player_right_pos_q <= 0;
+				ball_pos_x_q <= 0;
+				ball_pos_y_q <= 0;
+			end
+		else
+			begin
+				player_left_pos_q <= player_left_pos_d;
+				player_right_pos_q <= player_right_pos_d;
+				ball_pos_x_q <= ball_pos_x_d;
+				ball_pos_y_q <= ball_pos_y_d;
+			end
+	end
 
+	
+	/////////////////////////////////////////////////////////////////
+	// Graphics
+	/////////////////////////////////////////////////////////////////
+	wire R, G, B;
+
+	graphics graphics(
+		clk, reset,
+		ball_pos_x_q, ball_pos_y_q,
+		player_left_pos_q, player_right_pos_q,
+		canvas_top, canvas_bottom, canvas_left, canvas_right,
+		ball_size,
+		paddle_offset, paddle_height, paddle_width,
+		R, G, B, vga_h_sync, vga_v_sync
+	);
+	
+	assign frame_clk = ~vga_v_sync;
+
+	// TODO: Change back to RBG, just using R for all for white ball
+	always @ (posedge clk)
+		begin
+			vga_r = R;
+			vga_g = R;
+			vga_b = R;
+		end
 
 endmodule
