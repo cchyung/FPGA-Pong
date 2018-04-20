@@ -49,6 +49,9 @@ impact_impact.xwbt
 ise_impact.cmd
 webtalk_impact.xml
 
+# ISIM Files
+*.wdb
+
 # Core Generator generated files
 xaw2verilog.log
 
