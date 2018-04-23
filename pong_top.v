@@ -22,17 +22,22 @@ module pong_top(
 	ClkPort,
 	St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar,
 	vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b,
-	btnU, btnD, btnL, btnR,
+	btnU, btnD, btnL, btnR, btnC,
 	Sw0, Sw1,
+	Ld0, Ld1, Ld2, Ld3,
 	An0, An1, An2, An3, Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp
 );
 
-	input ClkPort, Sw0, btnU, btnD, btnR, btnL, Sw0, Sw1;
+	input ClkPort, Sw0, btnU, btnD, btnR, btnL, btnC, Sw0, Sw1;
 	output St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar;
 	output vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b;
 	output An0, An1, An2, An3, Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp;
+	output Ld0, Ld1, Ld2, Ld3;
 	reg vga_r, vga_g, vga_b;
 
+	assign Ld1 = 0;
+	assign Ld2 = 0;
+	assign Ld3 = 0;
 	/////////////////////////////////////////////////////////////////
 	// Game Constants
 	/////////////////////////////////////////////////////////////////
@@ -52,10 +57,25 @@ module pong_top(
 	localparam [9:0] paddle_width = 10'd10;
 
 	// Clock setup and generation
-	wire reset, start, ClkPort, clk, button_clk, frame_clk;
-
+	wire reset, start, ClkPort, clk, button_clk;
+	
 	BUF BUF1 (board_clk, ClkPort);
 	BUF BUF2 (reset, Sw0);
+	BUF BUF3 (frame_btn, btnC);
+	
+	BUF BUF4 (start_game, Sw1);
+	
+	
+	// testing purposes
+	reg frame_clk_gated;
+	
+	always @ (posedge frame_clk)
+		begin
+			if(frame_clk && frame_btn)
+				frame_clk_gated = 1;
+			else
+				frame_clk_gated = 0;
+		end
 
 	reg [27:0]	DIV_CLK;
 	always @ (posedge ClkPort, posedge reset)
@@ -72,48 +92,6 @@ module pong_top(
 	// disable memories
 	assign 	{St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar} = {5'b11111};
 	
-	// TEMP TESTING STUFF
-	reg [10:0] ball_pos_x;
-	reg [10:0] ball_pos_y;
-	reg [10:0] paddle_left_pos;
-	reg [10:0] paddle_right_pos;
-	reg direction;
-
-	reg [10:0] frame_count;
-	wire frame_clock;
-	// A frame counter to increment everytime an entire frame has been drawn onto the screen
-	always @ (posedge reset or negedge vga_v_sync)
-	begin : FRAME_COUNTER
-		if(reset)
-			begin
-				frame_count <= 0;
-			end
-		else
-			frame_count <= frame_count + 1;
-	end
-
-	assign frame_clock = frame_count[0]; // Generate a frame clock which will determine the speed of the game
-
-	// Synchronize animations on the negedge of v_sync
-	always @ (negedge vga_v_sync or posedge reset)
-	begin
-		if(reset)
-			begin
-				direction <= 1;
-				ball_pos_x <= 10'd50;
-				ball_pos_y <= 10'd50;
-				paddle_left_pos <= 10'd100;
-				paddle_right_pos <= 10'd100;
-			end
-		else
-			begin
-				if(btnU)
-					paddle_left_pos <= paddle_left_pos + 4;
-				else if (btnD)
-					paddle_left_pos <= paddle_left_pos - 4;
-			end
-	end
-
 
 	/////////////////////////////////////////////////////////////////
 	// SSD
@@ -122,9 +100,9 @@ module pong_top(
 	wire 	[3:0]	SSD0, SSD1, SSD2, SSD3;
 	wire 	[1:0] ssdscan_clk;
 
-	assign SSD3 = score_left;
-	assign SSD2 = score_right;
-	assign SSD1 = ball_pos_x[3:0];
+	assign SSD3 = score_right;
+	assign SSD2 = ball_pos_x_q[7:4];
+	assign SSD1 = ball_pos_x_q[3:0];
 	assign SSD0 = {0, state};
 
 	// need a scan clk for the seven segment display
@@ -181,7 +159,6 @@ module pong_top(
 	/////////////////////////////////////////////////////////////////
 	wire [1:0] player_right_input = {btnU, btnD};
 	wire [1:0] player_left_input = 2'b00;
-	wire start_game = 1; // TEMP
 	wire game_running;
 	wire game_over_signal;
 	
@@ -200,10 +177,43 @@ module pong_top(
 	
 	wire [2:0] state;
 
+	// frame button setup for debugging
+	reg [2:0] btn_state;
+	reg frame_clk;
+	reg frame_clk_btn;
+	
+	
+	always @ (posedge clk)
+	begin
+		if(reset)
+			btn_state <= 0;
+			frame_clk_btn <= 0;
+		case(btn_state)
+			2'b00:
+				begin
+					if(frame_btn)
+						btn_state <= 2'b01;
+				end
+				
+			2'b01:
+				begin
+					frame_clk_btn <= 1;
+					btn_state <= 2'b10;
+				end
+			2'b10:
+				begin
+					frame_clk_btn <= 0;
+					if(~frame_btn)
+						begin
+							btn_state <= 2'b00;
+						end
+				end
+		endcase
+	end
 	
 	game_sm engine(
 		clk, reset,
-		frame_clk,
+		frame_clk_btn,
 		start_game,
 		player_left_input, player_right_input,
 		paddle_width, paddle_height, paddle_offset,
@@ -234,6 +244,7 @@ module pong_top(
 				ball_pos_y_q <= ball_pos_y_d;
 			end
 	end
+	
 
 	
 	/////////////////////////////////////////////////////////////////
@@ -251,7 +262,40 @@ module pong_top(
 		R, G, B, vga_h_sync, vga_v_sync
 	);
 	
-	assign frame_clk = ~vga_v_sync;
+	reg [1:0] f_state;
+	reg [15:0] div_frame_clk;
+	always @ (negedge vga_v_sync)
+	begin
+		if(reset)
+		begin
+			div_frame_clk <= 0;
+			f_state <= 0;
+		end
+		else
+		begin
+			div_frame_clk <= div_frame_clk + 1;
+			case(f_state)
+				2'b00:
+				begin
+					if(div_frame_clk[5])
+						f_state <= 2'b01;
+				end
+				2'b01:
+				begin
+					frame_clk <= 1;
+					f_state <= 2'b10;
+				end
+				2'b10:
+				begin
+					frame_clk <= 0;
+					if(~div_frame_clk[5])
+						f_state <= 2'b00;
+				end
+			endcase
+		end
+	end
+	
+	assign Ld0 = frame_clk;
 
 	// TODO: Change back to RBG, just using R for all for white ball
 	always @ (posedge clk)

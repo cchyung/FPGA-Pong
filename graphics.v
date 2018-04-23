@@ -83,12 +83,12 @@ module graphics(
 	assign border = border_horizontal || border_vertical;
 
 	// draw ball
-	wire ball = (CounterX >= ball_pos_x && CounterX <= (ball_pos_x + ball_size)) && (CounterY >= ball_pos_y && CounterY <= (ball_pos_y + ball_size));
+	wire ball = (CounterX >= ball_pos_x && CounterX < (ball_pos_x + ball_size)) && (CounterY >= ball_pos_y && CounterY < (ball_pos_y + ball_size));
 
 	// draw paddles
 	wire paddles;
-	wire paddle_left = (CounterY >= paddle_left_pos && CounterY <= paddle_left_pos + paddle_height) && (CounterX >= paddle_offset + canvas_left && CounterX <= paddle_offset + canvas_left + paddle_width);
-	wire paddle_right = (CounterY >= paddle_right_pos && CounterY <= paddle_right_pos + paddle_height) && (CounterX >= canvas_right - paddle_offset - paddle_width && CounterX <= canvas_right - paddle_offset);
+	wire paddle_left = (CounterY >= paddle_left_pos && CounterY < paddle_left_pos + paddle_height) && (CounterX >= paddle_offset + canvas_left && CounterX < paddle_offset + canvas_left + paddle_width);
+	wire paddle_right = (CounterY >= paddle_right_pos && CounterY < paddle_right_pos + paddle_height) && (CounterX >= canvas_right - paddle_offset - paddle_width && CounterX < canvas_right - paddle_offset);
 	assign paddles = paddle_left || paddle_right;
 
 	assign R = border || ball || paddles;

@@ -46,7 +46,7 @@ module game_sm(
 	 
 	localparam 
 		init = 3'b001,
-		start_point = 3'b010,
+		init_point = 3'b010,
 		run_point = 3'b011,
 		wait_for_frame = 3'b100,
 		point_over = 3'b101,
@@ -56,8 +56,8 @@ module game_sm(
 		paddle_speed = 3'd5;
 		
 	
-	reg [9:0] ball_pos_x;
-	reg [9:0] ball_pos_y;
+	reg signed [9:0] ball_pos_x;
+	reg signed [9:0] ball_pos_y;
 	reg [9:0] player_left_pos;
 	reg [9:0] player_right_pos;
 	reg [3:0] score_left;
@@ -66,18 +66,42 @@ module game_sm(
 	reg game_over_signal;
 	
 	// vectors for ball direction
-	reg [3:0] ball_dx;
-	reg [3:0] ball_dy;
+	reg signed [3:0] ball_dx;
+	reg signed [3:0] ball_dy;
 	
 	reg [2:0] state;
+
+	reg [2:0] collision_test_signal;
 	
 	// Middle values of canvas
-	wire [9:0] vertical_middle = (border_top - border_bottom) / 2 + border_top - 1;
-	wire [9:0] horizontal_middle = (border_right - border_left) / 2 + border_right - 1;
+	wire [9:0] vertical_middle = (border_bottom - border_top) / 2 + border_top - 1;
+	wire [9:0] horizontal_middle = (border_right - border_left) / 2 + border_left - 1;
 	wire [9:0] ball_middle_y = ball_pos_y + (ball_size / 2) - 1;
+	
+	// Collision wires
+	// Vertical walls
+	wire top_wall_collide = ball_pos_y < border_top;
+	wire bottom_wall_collide = ball_pos_y + ball_size > border_bottom;
+	wire vertical_wall_collide = top_wall_collide | bottom_wall_collide;
+	
+	// Side walls
+	wire side_wall_collide = left_wall_collide | right_wall_collide;
+	wire left_wall_collide = ball_pos_x + ball_size <= border_left;
+	wire right_wall_collide = ball_pos_x >= border_right;
+	
+	// Paddle
+	wire [9:0] paddle_left_x = border_left + paddle_offset + paddle_width + 1;
+	wire [9:0] paddle_right_x = border_right - paddle_offset - paddle_width - 1;
+	
+	wire paddle_left_same_height = ball_pos_y + ball_size + 1 >= player_left_pos && ball_pos_y < player_left_pos + paddle_height - 1;
+	wire paddle_right_same_height = ball_pos_y + ball_size + 1 >= player_right_pos && ball_pos_y < player_right_pos + paddle_height - 1;
+	
+	wire paddle_left_collide = ball_pos_x <= paddle_left_x && ball_pos_x > paddle_left_x - paddle_width && paddle_left_same_height;
+	wire paddle_right_collide = ball_pos_x >= paddle_right_x && ball_pos_x < paddle_right_x + paddle_width && paddle_right_same_height;
+	wire paddle_collide = paddle_left_collide | paddle_right_collide;
 
 	// Begin state machine
-	always @ (posedge clk)
+	always @ (posedge clk or posedge reset)
 	begin : GAME_STATE_MACHINE
 		if(reset)
 		begin
@@ -90,6 +114,8 @@ module game_sm(
 			ball_dx <= 0;
 			ball_dy <= 0;
 			
+			collision_test_signal <= 0;
+			
 			state <= init; // reset to initial state
 		end
 		else
@@ -100,12 +126,22 @@ module game_sm(
 					score_left <= 0;
 					score_right <= 0;
 					
+					// set ball and paddle to the middle of the screen
+					ball_pos_x <= horizontal_middle - (ball_size / 2);
+					ball_pos_y <= vertical_middle - (ball_size / 2);
+					player_left_pos <= vertical_middle - (paddle_height / 2);
+					player_right_pos <= vertical_middle - (paddle_height / 2);
+					
+					// start off ball serving to the right
+					ball_dx <= 0;
+					ball_dy <= -2;
+					
 					// if start game signal received, begin point
 					if(start_game)
-						state <= start_point;
+						state <= init_point;
 				end
 				
-				start_point:
+				init_point:
 				begin
 					// set ball and paddle to the middle of the screen
 					ball_pos_x <= horizontal_middle - (ball_size / 2);
@@ -114,10 +150,9 @@ module game_sm(
 					player_right_pos <= vertical_middle - (paddle_height / 2);
 					
 					// start off ball serving to the right
-					ball_dx <= 5;
+					ball_dx <= -2;
 					ball_dy <= 0;
 					
-					// go to run point state
 					state <= run_point;
 				end
 				
@@ -126,82 +161,59 @@ module game_sm(
 				begin
 					// REMEMBER: SUBTRACTION IS UP ADDING IS DOWN
 					// paddle update
-					if(player_left_pos < border_top && player_left_input == up)
+					if(player_left_pos > border_top && player_left_input == up)
 						player_left_pos <= player_left_pos - paddle_speed;
 					
-					if(player_left_pos - paddle_height > border_bottom && player_left_input == down)
+					if(player_left_pos + paddle_height <= border_bottom && player_left_input == down)
 						player_left_pos <= player_left_pos + paddle_speed;
 					
-					if(player_right_pos < border_top && player_right_input == up)
+					if(player_right_pos > border_top && player_right_input == up)
 						player_right_pos <= player_right_pos - paddle_speed;
 						
-					if(player_right_pos - paddle_height > border_bottom && player_right_input == down)
+					if(player_right_pos + paddle_height <= border_bottom && player_right_input == down)
 						player_right_pos <= player_right_pos + paddle_speed;
 					
-					// ball update
-					// first check for paddle collisions
-					if(((ball_pos_y + ball_size - 1 >= player_left_pos && ball_pos_y < player_left_pos + paddle_height - 1)
-							|| (ball_pos_y + ball_size - 1 >= player_right_pos && ball_pos_y < player_right_pos + paddle_height - 1))
-							&& ((ball_pos_x + ball_dx <= border_left + paddle_offset + paddle_width) 
-								|| (ball_pos_x + ball_dx >= border_right - paddle_offset - paddle_width)))
+					// collision check and ball update
+					if(paddle_collide)
 						begin
-							if(ball_pos_x + ball_dx <= border_left + paddle_offset + paddle_width 
-								&& ball_pos_x + ball_dx >= border_left + paddle_offset)
+							if(paddle_left_collide)
 								begin
-									ball_pos_x <= ball_pos_x - (ball_pos_x - border_left + paddle_offset + paddle_width);
-									ball_dy <= (ball_middle_y - player_left_pos - paddle_height / 2 + 1) / 5;
-									if(5 - ball_dy <= 0)
-										ball_dx <= (5 - ball_dy) * -1;
-									else
-										ball_dx <= 5 - ball_dy;
+									ball_dx <= ball_dx * -1;
+									ball_pos_x <= paddle_left_x + 1;
 								end
-							if(ball_pos_x + ball_dx + ball_size >= border_right - paddle_offset - paddle_width 
-								&& ball_pos_x + ball_dx + ball_size <= border_right - paddle_offset)
+							else // right paddle collision
 								begin
-									ball_pos_x <= ball_pos_x + (border_right - paddle_offset - paddle_width - ball_pos_x);
-									ball_dy <= (ball_middle_y - player_right_pos - paddle_height / 2 + 1) / 5;
-									if(5 - ball_dy >= 0)
-										ball_dx <= (5 - ball_dy) * -1;
-									else 
-										ball_dx <= 5 - ball_dy;
+									ball_dx <= ball_dx * -1;
+									ball_pos_x <= paddle_right_x - 1;
 								end
+							state <= wait_for_frame;
 						end
-					
-					// then check if ball is about to collide with top or bottom wall
-					else if (ball_pos_y + ball_dy + ball_size + 1 >= border_bottom || ball_pos_y + ball_dy - 1 <= border_top)
+					else if (vertical_wall_collide)
 						begin
-							if(ball_pos_y + ball_dy + ball_size >= border_bottom)
-								begin
-									ball_pos_y <= ball_pos_y + (ball_pos_y + ball_size - border_bottom);
-								end
-							if(ball_pos_y + ball_dy <= border_top)
-								begin
-									ball_pos_y <= ball_pos_y - (ball_pos_y - border_top - 1);
-								end
-							ball_pos_x <= ball_pos_x + ball_dx; // add x direction anyways
+							ball_dy <= ball_dy * -1;
+							state <= wait_for_frame;
 						end
-					// finally check if ball is past either side of the game
-					else if (ball_pos_x <= border_left || ball_pos_x + ball_size >= border_right)
-					begin
-						if(ball_pos_x <= border_left)
-							score_right <= score_right + 1;
-						else
-							score_left <= score_left + 1;
-						state <= point_over;
-					end	
-					else 
+						
+					else if (side_wall_collide)
 						begin
-							ball_pos_y <= ball_pos_y + ball_dy;
+							if(left_wall_collide)
+								score_left <= score_left + 1;
+							else	
+								score_right <= score_right + 1;
+							state <= point_over;	
+						end
+					else
+						begin
 							ball_pos_x <= ball_pos_x + ball_dx;
-						end	
-					
-					state <= wait_for_frame;
+							ball_pos_y <= ball_pos_y + ball_dy;
+							state <= wait_for_frame;
+						end
 				end
 				
 				// wait until frame has been drawn before moving on.
 				wait_for_frame:
 				begin
-					if(frame_clk && state != point_over)
+					if(frame_clk)
 						state <= run_point;
 				end
 				
@@ -211,7 +223,7 @@ module game_sm(
 					if(score_right > 10 || score_left > 10)
 						state <= game_over;
 					else
-						state <= start_point;
+						state <= init_point;
 				end
 				
 				// game is over

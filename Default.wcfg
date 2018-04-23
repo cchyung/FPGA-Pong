@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="C:/Users/Conner Chyung/Dropbox/School/EE 354/finalproject/pong/game_sm_tb_isim_beh.wdb" id="1" type="auto">
+         <top_modules>
+            <top_module name="game_sm_tb" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <WVObjectSize size="26" />
+   <wvobject fp_name="/game_sm_tb/game_running" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">game_running</obj_property>
+      <obj_property name="ObjectShortName">game_running</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/game_over_signal" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">game_over_signal</obj_property>
+      <obj_property name="ObjectShortName">game_over_signal</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/ball_pos_x" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">ball_pos_x[9:0]</obj_property>
+      <obj_property name="ObjectShortName">ball_pos_x[9:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/ball_pos_y" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">ball_pos_y[9:0]</obj_property>
+      <obj_property name="ObjectShortName">ball_pos_y[9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/player_left_pos" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">player_left_pos[9:0]</obj_property>
+      <obj_property name="ObjectShortName">player_left_pos[9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/player_right_pos" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">player_right_pos[9:0]</obj_property>
+      <obj_property name="ObjectShortName">player_right_pos[9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/score_left" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">score_left[3:0]</obj_property>
+      <obj_property name="ObjectShortName">score_left[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/score_right" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">score_right[3:0]</obj_property>
+      <obj_property name="ObjectShortName">score_right[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/state" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">state[2:0]</obj_property>
+      <obj_property name="ObjectShortName">state[2:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/clk" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/reset" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">reset</obj_property>
+      <obj_property name="ObjectShortName">reset</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/frame_clk" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">frame_clk</obj_property>
+      <obj_property name="ObjectShortName">frame_clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/start_game" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">start_game</obj_property>
+      <obj_property name="ObjectShortName">start_game</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/player_left_input" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">player_left_input[1:0]</obj_property>
+      <obj_property name="ObjectShortName">player_left_input[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/player_right_input" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">player_right_input[1:0]</obj_property>
+      <obj_property name="ObjectShortName">player_right_input[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/uut/ball_dx" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">ball_dx[3:0]</obj_property>
+      <obj_property name="ObjectShortName">ball_dx[3:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/uut/ball_dy" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">ball_dy[3:0]</obj_property>
+      <obj_property name="ObjectShortName">ball_dy[3:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/uut/collision_test_signal" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">collision_test_signal[2:0]</obj_property>
+      <obj_property name="ObjectShortName">collision_test_signal[2:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/uut/paddle_left_x" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">paddle_left_x[9:0]</obj_property>
+      <obj_property name="ObjectShortName">paddle_left_x[9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/uut/paddle_right_x" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">paddle_right_x[9:0]</obj_property>
+      <obj_property name="ObjectShortName">paddle_right_x[9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/uut/paddle_left_collide" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">paddle_left_collide</obj_property>
+      <obj_property name="ObjectShortName">paddle_left_collide</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/uut/paddle_right_collide" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">paddle_right_collide</obj_property>
+      <obj_property name="ObjectShortName">paddle_right_collide</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/uut/paddle_left_same_height" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">paddle_left_same_height</obj_property>
+      <obj_property name="ObjectShortName">paddle_left_same_height</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/uut/paddle_right_same_height" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">paddle_right_same_height</obj_property>
+      <obj_property name="ObjectShortName">paddle_right_same_height</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/uut/player_left_pos" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">player_left_pos[9:0]</obj_property>
+      <obj_property name="ObjectShortName">player_left_pos[9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/game_sm_tb/uut/player_right_pos" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">player_right_pos[9:0]</obj_property>
+      <obj_property name="ObjectShortName">player_right_pos[9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+</wave_config>

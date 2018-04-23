@@ -50,6 +50,8 @@ module game_sm_tb;
 	wire [3:0] score_left;
 	wire [3:0] score_right;
 	wire [2:0] state;
+	
+	integer clk_count = 0;
 
 	// Instantiate the Unit Under Test (UUT)
 	game_sm uut (
@@ -77,28 +79,55 @@ module game_sm_tb;
 		.score_right(score_right), 
 		.state(state)
 	);
+	
 
+	//CLK_GENERATOR
+	always
+	  begin  : CLK_GENERATOR
+			#10 clk = ~clk;
+			if(clk_count % 10 == 0)
+				frame_clk = 1;
+			else
+				frame_clk = 0;
+	end
+	
+	initial begin
+	 clk_count = 0;
+    forever
+       begin
+	      #20 clk_count = clk_count + 1;
+       end 
+	end
+	
 	initial begin
 		// Initialize Inputs
 		clk = 0;
-		reset = 0;
+		reset = 1;
 		frame_clk = 0;
 		start_game = 0;
 		player_left_input = 0;
 		player_right_input = 0;
-		paddle_width = 0;
-		paddle_height = 0;
-		paddle_offset = 0;
-		ball_size = 0;
+		paddle_width = 2;
+		paddle_height = 4;
+		paddle_offset = 2;
+		ball_size = 4;
 		border_top = 0;
-		border_bottom = 0;
+		border_bottom = 20;
 		border_left = 0;
-		border_right = 0;
+		border_right = 40;
+
 
 		// Wait 100 ns for global reset to finish
 		#100;
+		reset = 0;
+		#10;
         
 		// Add stimulus here
+		start_game = 1;
+		#20;
+		start_game = 0;
+		player_left_input = {2'b10};
+		#500;
 
 	end
       
