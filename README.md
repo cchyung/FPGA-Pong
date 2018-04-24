@@ -1,7 +1,8 @@
 # FGPA Pong
 ## Description
 A remake of one of the original video games, PONG on a Xilinx Spartan-6 Field Programmable Gate Array.  
-If you want to see screenshots of the game, or the lab report for the class I built this project in, visit the media folder.
+If you want to see screenshots of the game, or the lab report for the class this project was built for, visit the media folder.  
+Built with Randy Zhang: https://github.com/UndeadxPanda
 
 ## Features
 Uses the board's VGA interface to display the game canvas.  
