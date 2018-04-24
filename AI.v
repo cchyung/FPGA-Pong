@@ -19,22 +19,32 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module AI(
+	 input clk, 
+	 input reset,
     input [9:0] ball_pos_y,
     input [9:0] paddle_pos,
+	 input [9:0] paddle_height,
     output reg [1:0] AI_input
     );
 
 	localparam
-		up = 2'b01, 
-		down = 2'b10,
-		paddle_height = 10'd50;
+		up = 2'b10, 
+		down = 2'b01;
 
-	always@(*)
+	always @ (posedge clk or posedge reset)
 	begin
-		if (paddle_pos + paddle_height/2 < ball_pos_y) //move down
-			AI_input <= down;
-		else //move up
-			AI_input <= up;
+		if(reset)
+			begin
+				AI_input <= 0;
+			end
+		else
+			begin
+				if (paddle_pos + paddle_height/2 < ball_pos_y) //move down
+					AI_input <= down;
+				if(paddle_pos + paddle_height/2 > ball_pos_y) //move up
+					AI_input <= up;
+			end
+		
 	end
 
 endmodule

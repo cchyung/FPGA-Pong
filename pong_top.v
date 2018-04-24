@@ -158,8 +158,8 @@ module pong_top(
 	/////////////////////////////////////////////////////////////////
 	// Game Engine
 	/////////////////////////////////////////////////////////////////
-	wire [1:0] player_right_input = {btnU, btnD};
-	wire [1:0] player_left_input = {btnU, btnD};
+	wire [1:0] player_right_input;
+	wire [1:0] player_left_input = {btnU, btnD}; // human player controlled by Up and Down buttons
 	wire game_running;
 	wire game_over_signal;
 	
@@ -221,7 +221,8 @@ module pong_top(
 	end
 	
 	game_sm engine(
-		frame_clk, reset,
+		frame_clk, 
+		reset,
 		frame_clk,
 		start_game,
 		player_left_input, player_right_input,
@@ -234,7 +235,8 @@ module pong_top(
 		ball_pos_x_d, ball_pos_y_d,
 		ball_dx_d, ball_dy_d,
 		player_left_pos_d, player_right_pos_d,
-		score_left, score_right
+		score_left, score_right, 
+		state
 	);
 	
 	// update new positions after frame is drawn
@@ -260,7 +262,12 @@ module pong_top(
 			end
 	end
 	
-
+	
+	/////////////////////////////////////////////////////////////////
+	// AI
+	/////////////////////////////////////////////////////////////////
+	
+	AI computer_player(frame_clk, reset, ball_pos_y_q, player_right_pos_q, paddle_height, player_right_input);
 	
 	/////////////////////////////////////////////////////////////////
 	// Graphics

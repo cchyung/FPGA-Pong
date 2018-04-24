@@ -1,0 +1,17 @@
+
+		pin2ucf Report File
+Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+	   Created : Mon Apr 23 20:02:28 2018
+
+
+
+List of Errors and Warnings
+===========================
+
+
+ERROR:1
+
+  The input file specified pong_top.ncd does not exist.
+  pin2ucf did not create any outputs due to this problem.
+  Please check your inputs and try again.
+
