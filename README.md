@@ -1,6 +1,8 @@
 # FGPA Pong
 ## Description
-A remake of one of the original video games, PONG on a Xilinx Spartan-6 Field Programmable Gate Array
+A remake of one of the original video games, PONG on a Xilinx Spartan-6 Field Programmable Gate Array.
+
+If you want to see screen shots of the game, visit the screenshots folder.
 
 ## Features
 Uses the board's VGA interface to display the game canvas.
