@@ -83,7 +83,7 @@ module graphics(
 	assign border = border_horizontal || border_vertical;
 
 	// draw ball
-	wire ball = (CounterX >= ball_pos_x && CounterX < (ball_pos_x + ball_size)) && (CounterY >= ball_pos_y && CounterY < (ball_pos_y + ball_size));
+	wire ball = (CounterX >= ball_pos_x && CounterX < (ball_pos_x + ball_size)) && (CounterY >= ball_pos_y && CounterY < (ball_pos_y + ball_size)) && (CounterX >= canvas_left && CounterX <= canvas_right) && (CounterY >= canvas_top && CounterY <= canvas_bottom);
 
 	// draw paddles
 	wire paddles;

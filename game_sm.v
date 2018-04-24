@@ -35,8 +35,10 @@ module game_sm(
 		input [9:0] border_right,
 		output game_running,
 		output game_over_signal,
-		output [9:0] ball_pos_x,
-		output [9:0] ball_pos_y,
+		output signed [9:0] ball_pos_x,
+		output signed [9:0] ball_pos_y,
+		output signed [9:0] ball_dx,
+		output signed [9:0] ball_dy,
 		output [9:0] player_left_pos,
 		output [9:0] player_right_pos,
 		output [3:0] score_left,
@@ -48,12 +50,11 @@ module game_sm(
 		init = 3'b001,
 		init_point = 3'b010,
 		run_point = 3'b011,
-		wait_for_frame = 3'b100,
 		point_over = 3'b101,
 		game_over = 3'b110,
-		up = 2'b01, 		// constants for reading user input
-		down = 2'b10,
-		paddle_speed = 3'd5;
+		up = 2'b10, 		// constants for reading user input
+		down = 2'b01,
+		paddle_speed = 3'd4;
 		
 	
 	reg signed [9:0] ball_pos_x;
@@ -96,9 +97,82 @@ module game_sm(
 	wire paddle_left_same_height = ball_pos_y + ball_size + 1 >= player_left_pos && ball_pos_y < player_left_pos + paddle_height - 1;
 	wire paddle_right_same_height = ball_pos_y + ball_size + 1 >= player_right_pos && ball_pos_y < player_right_pos + paddle_height - 1;
 	
-	wire paddle_left_collide = ball_pos_x <= paddle_left_x && ball_pos_x > paddle_left_x - paddle_width && paddle_left_same_height;
-	wire paddle_right_collide = ball_pos_x >= paddle_right_x && ball_pos_x < paddle_right_x + paddle_width && paddle_right_same_height;
+	wire paddle_left_collide = (ball_pos_x <= paddle_left_x) && (ball_pos_x > paddle_left_x - paddle_width) && paddle_left_same_height;
+	wire paddle_right_collide = (ball_pos_x + ball_size >= paddle_right_x) && (ball_pos_x + ball_size < paddle_right_x + paddle_width) && paddle_right_same_height;
 	wire paddle_collide = paddle_left_collide | paddle_right_collide;
+	
+	// "randomize" starting angles
+	reg last_point_won; // 0 if left won last, 1 if right won last
+	
+	// selects based on 1/2 * total score to determine what angle the ball is served at
+	wire [3:0] selector = (score_left + score_right) % 10;
+	
+	reg [3:0] next_ball_dx;
+	reg [3:0] next_ball_dy;
+	
+	
+	// generates a new initial velocity based on the current score, the new velocity vector is updated the init_point state
+	// it is assumed tht the ball will be served to the right, logic to determine x direction is in init_point
+	always @ (posedge state[0] or posedge reset)
+	begin
+		if(reset)
+			begin
+				next_ball_dx <= 0;
+				next_ball_dy <= 0;
+			end
+		case(selector)
+			4'd0:
+			begin
+				next_ball_dx <= 2;
+				next_ball_dy <= 2;
+			end
+			4'd1:
+			begin
+				next_ball_dx <= 2;
+				next_ball_dy <= 2;
+			end
+			4'd2:
+			begin
+				next_ball_dx <= 3;
+				next_ball_dy <= -1;
+			end
+			4'd3:
+			begin
+				next_ball_dx <= 3;
+				next_ball_dy <= 2;
+			end
+			4'd4:
+			begin
+				next_ball_dx <= 3;
+				next_ball_dy <= -2;
+			end
+			4'd5:
+			begin
+				next_ball_dx <= 2;
+				next_ball_dy <= 3;
+			end
+			4'd6:
+			begin
+				next_ball_dx <= 2;
+				next_ball_dy <= -2;
+			end
+			4'd7:
+			begin
+				next_ball_dx <= 3;
+				next_ball_dy <= 2;
+			end
+			4'd8:
+			begin
+				next_ball_dx <= 2;
+				next_ball_dy <= 3;
+			end
+			4'd9:
+			begin
+				next_ball_dx <= 2;
+				next_ball_dy <= -3;
+			end
+		endcase		
+	end
 
 	// Begin state machine
 	always @ (posedge clk or posedge reset)
@@ -107,14 +181,17 @@ module game_sm(
 		begin
 			ball_pos_x <= 0;
 			ball_pos_y <= 0;
+			
+			ball_dx <= 0;
+			ball_dy <= 0;
+			
 			player_left_pos <= 0;
 			player_right_pos <= 0;
 			score_left <= 0;
 			score_right <= 0;
-			ball_dx <= 0;
-			ball_dy <= 0;
-			
 			collision_test_signal <= 0;
+			
+			last_point_won <= 1; // serve to left by default
 			
 			state <= init; // reset to initial state
 		end
@@ -131,10 +208,8 @@ module game_sm(
 					ball_pos_y <= vertical_middle - (ball_size / 2);
 					player_left_pos <= vertical_middle - (paddle_height / 2);
 					player_right_pos <= vertical_middle - (paddle_height / 2);
-					
-					// start off ball serving to the right
 					ball_dx <= 0;
-					ball_dy <= -2;
+					ball_dy <= 0;
 					
 					// if start game signal received, begin point
 					if(start_game)
@@ -149,10 +224,21 @@ module game_sm(
 					player_left_pos <= vertical_middle - (paddle_height / 2);
 					player_right_pos <= vertical_middle - (paddle_height / 2);
 					
-					// start off ball serving to the right
-					ball_dx <= -2;
-					ball_dy <= 0;
 					
+					// if the right player won the last point serve to the left (negative dx)
+					if(last_point_won)
+						begin
+							ball_dx <= next_ball_dx * -1;
+						end
+					else
+						begin
+							ball_dx <= next_ball_dx;
+						end
+				
+					ball_dy <= next_ball_dy;
+					
+					
+					// start off ball serving to the right
 					state <= run_point;
 				end
 				
@@ -184,43 +270,47 @@ module game_sm(
 							else // right paddle collision
 								begin
 									ball_dx <= ball_dx * -1;
-									ball_pos_x <= paddle_right_x - 1;
+									ball_pos_x <= paddle_right_x - 1 - ball_size;
 								end
-							state <= wait_for_frame;
 						end
 					else if (vertical_wall_collide)
 						begin
 							ball_dy <= ball_dy * -1;
-							state <= wait_for_frame;
+							if(top_wall_collide)
+								begin
+									ball_pos_y <= border_top + 1;
+								end
+							else
+								begin
+									ball_pos_y <= border_bottom - ball_size - 1;
+								end
 						end
 						
 					else if (side_wall_collide)
 						begin
 							if(left_wall_collide)
-								score_left <= score_left + 1;
+								begin
+									score_right <= score_right + 1;
+									last_point_won <= 1;
+								end
 							else	
-								score_right <= score_right + 1;
+								begin
+									score_left <= score_left + 1;
+									last_point_won <= 0;
+								end
 							state <= point_over;	
 						end
 					else
 						begin
 							ball_pos_x <= ball_pos_x + ball_dx;
 							ball_pos_y <= ball_pos_y + ball_dy;
-							state <= wait_for_frame;
 						end
-				end
-				
-				// wait until frame has been drawn before moving on.
-				wait_for_frame:
-				begin
-					if(1)
-						state <= run_point;
 				end
 				
 				// point is over
 				point_over:
 				begin
-					if(score_right > 10 || score_left > 10)
+					if(score_right > 9 || score_left > 9)
 						state <= game_over;
 					else
 						state <= init_point;

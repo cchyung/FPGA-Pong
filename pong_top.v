@@ -68,6 +68,7 @@ module pong_top(
 	
 	// testing purposes
 	reg frame_clk_gated;
+	wire frame_clk = ~vga_v_sync;
 	
 	always @ (posedge frame_clk)
 		begin
@@ -100,10 +101,10 @@ module pong_top(
 	wire 	[3:0]	SSD0, SSD1, SSD2, SSD3;
 	wire 	[1:0] ssdscan_clk;
 
-	assign SSD3 = score_right;
-	assign SSD2 = ball_pos_x_q[7:4];
-	assign SSD1 = ball_pos_x_q[3:0];
-	assign SSD0 = {0, state};
+	assign SSD3 = score_left[3:0];
+	assign SSD2 = score_right[3:0];
+	assign SSD1 = 4'h0;
+	assign SSD0 = 4'h0;
 
 	// need a scan clk for the seven segment display
 	// 191Hz (50MHz / 2^18) works well
@@ -158,7 +159,7 @@ module pong_top(
 	// Game Engine
 	/////////////////////////////////////////////////////////////////
 	wire [1:0] player_right_input = {btnU, btnD};
-	wire [1:0] player_left_input = 2'b00;
+	wire [1:0] player_left_input = {btnU, btnD};
 	wire game_running;
 	wire game_over_signal;
 	
@@ -166,11 +167,20 @@ module pong_top(
 	wire [9:0] player_right_pos_d;
 	wire [9:0] ball_pos_x_d;
 	wire [9:0] ball_pos_y_d;
+	
+	wire [9:0] ball_dx_d;
+	wire [9:0] ball_dy_d;
 
 	reg [9:0] player_left_pos_q;
 	reg [9:0] player_right_pos_q;
 	reg [9:0] ball_pos_x_q;
 	reg [9:0] ball_pos_y_q;
+	
+	reg [9:0] ball_dx_q;
+	reg [9:0] ball_dy_q;
+	
+	
+	
 	
 	wire [3:0] score_left;
 	wire [3:0] score_right;
@@ -179,7 +189,6 @@ module pong_top(
 
 	// frame button setup for debugging
 	reg [2:0] btn_state;
-	reg frame_clk;
 	reg frame_clk_btn;
 	
 	
@@ -218,10 +227,12 @@ module pong_top(
 		player_left_input, player_right_input,
 		paddle_width, paddle_height, paddle_offset,
 		ball_size,
-		canvas_top, canvas_bottom, canvas_left, canvas_right,
+		canvas_top, canvas_bottom, 
+		canvas_left, canvas_right,
 		game_running,
 		game_over_signal,
 		ball_pos_x_d, ball_pos_y_d,
+		ball_dx_d, ball_dy_d,
 		player_left_pos_d, player_right_pos_d,
 		score_left, score_right
 	);
@@ -235,6 +246,8 @@ module pong_top(
 				player_right_pos_q <= 0;
 				ball_pos_x_q <= 0;
 				ball_pos_y_q <= 0;
+				ball_dx_q <= 0;
+				ball_dy_q <= 0;
 			end
 		else
 			begin
@@ -242,6 +255,8 @@ module pong_top(
 				player_right_pos_q <= player_right_pos_d;
 				ball_pos_x_q <= ball_pos_x_d;
 				ball_pos_y_q <= ball_pos_y_d;
+				ball_dx_q <= ball_dx_d;
+				ball_dy_q <= ball_dy_d;
 			end
 	end
 	
@@ -262,38 +277,7 @@ module pong_top(
 		R, G, B, vga_h_sync, vga_v_sync
 	);
 	
-	reg [1:0] f_state;
-	reg [15:0] div_frame_clk;
-	always @ (negedge vga_v_sync)
-	begin
-		if(reset)
-		begin
-			div_frame_clk <= 0;
-			f_state <= 0;
-		end
-		else
-		begin
-			div_frame_clk <= div_frame_clk + 1;
-			case(f_state)
-				2'b00:
-				begin
-					if(div_frame_clk[2])
-						f_state <= 2'b01;
-				end
-				2'b01:
-				begin
-					frame_clk <= 1;
-					f_state <= 2'b10;
-				end
-				2'b10:
-				begin
-					frame_clk <= 0;
-					if(~div_frame_clk[2])
-						f_state <= 2'b00;
-				end
-			endcase
-		end
-	end
+	
 	
 	assign Ld0 = frame_clk;
 
