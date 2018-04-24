@@ -61,9 +61,9 @@ module pong_top(
 	
 	BUF BUF1 (board_clk, ClkPort);
 	BUF BUF2 (reset, Sw0);
-	BUF BUF3 (frame_btn, btnC);
+	BUF BUF3 (frame_btn, Sw1); // single step frame for debugging
 	
-	BUF BUF4 (start_game, Sw1);
+	BUF BUF4 (start_game, btnC);
 	
 	
 	// testing purposes
@@ -178,9 +178,6 @@ module pong_top(
 	
 	reg [9:0] ball_dx_q;
 	reg [9:0] ball_dy_q;
-	
-	
-	
 	
 	wire [3:0] score_left;
 	wire [3:0] score_right;

@@ -238,8 +238,9 @@ module game_sm(
 					ball_dy <= next_ball_dy;
 					
 					
-					// start off ball serving to the right
-					state <= run_point;
+					// start point when btnc is pressed
+					if(start_game)
+						state <= run_point;
 				end
 				
 				// update positions and check for collisions
