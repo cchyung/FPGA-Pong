@@ -212,8 +212,8 @@ module pong_top(
 	end
 	
 	game_sm engine(
-		clk, reset,
-		frame_clk_btn,
+		frame_clk, reset,
+		frame_clk,
 		start_game,
 		player_left_input, player_right_input,
 		paddle_width, paddle_height, paddle_offset,
@@ -277,7 +277,7 @@ module pong_top(
 			case(f_state)
 				2'b00:
 				begin
-					if(div_frame_clk[5])
+					if(div_frame_clk[2])
 						f_state <= 2'b01;
 				end
 				2'b01:
@@ -288,7 +288,7 @@ module pong_top(
 				2'b10:
 				begin
 					frame_clk <= 0;
-					if(~div_frame_clk[5])
+					if(~div_frame_clk[2])
 						f_state <= 2'b00;
 				end
 			endcase

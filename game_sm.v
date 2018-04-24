@@ -213,7 +213,7 @@ module game_sm(
 				// wait until frame has been drawn before moving on.
 				wait_for_frame:
 				begin
-					if(frame_clk)
+					if(1)
 						state <= run_point;
 				end
 				
