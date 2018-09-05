@@ -4,6 +4,8 @@ A remake of one of the original video games, PONG on a Xilinx Spartan-6 Field Pr
 If you want to see screenshots of the game, or the lab report for the class this project was built for, visit the media folder.  
 Built with Randy Zhang: https://github.com/UndeadxPanda
 
+For screenshots, see `/media`
+
 ## Features
 Uses the board's VGA interface to display the game canvas.  
 Features an AI which you can play against.
